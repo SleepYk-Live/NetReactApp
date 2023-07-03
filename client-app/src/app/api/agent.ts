@@ -1,11 +1,11 @@
 import axios, { AxiosResponse } from "axios";
 import { Activity } from "../models/activity";
-import { setTimeout } from "timers";
+//import { setTimeout } from "timers";
 import { error } from "console";
 
 const sleep = (delay: number) => {
     return new Promise((resolve) => {
-        setTimeout(resolve, delay)
+        //setTimeout(resolve, delay)
     })
 }
 
@@ -13,7 +13,7 @@ axios.defaults.baseURL = 'http://localhost:5000/api'
 
 axios.interceptors.response.use(async response => {
     try {
-        await sleep(1000);
+        //await sleep(1000);
         return response;
     } catch (message) {
         console.log(message)

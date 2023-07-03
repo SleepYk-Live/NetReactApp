@@ -9,7 +9,7 @@ import {v4 as uuid} from 'uuid';
 
 export default observer(function ActivityForm(){
     const {activityStore} = useStore();
-    const {selectedActivity, createActivity, updateActivity, loading, loadActivity, loadingInitial} = activityStore;
+    const {createActivity, updateActivity, loading, loadActivity, loadingInitial} = activityStore;
     const {id} = useParams();
     const navigate = useNavigate();
 
@@ -29,7 +29,7 @@ export default observer(function ActivityForm(){
 
     function handleSubmit() {
         if(!activity.id) {
-            activity.id == uuid();
+            activity.id = uuid();
             createActivity(activity).then(() => navigate(`/activities/${activity.id}`));
         } else {
             updateActivity(activity).then(() => navigate(`/activities/${activity.id}`));

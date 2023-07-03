@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react';
 import { Container } from 'semantic-ui-react';
 import NavBar from './NavBar';
 import { observer } from 'mobx-react-lite';
