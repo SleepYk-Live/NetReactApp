@@ -1,0 +1,46 @@
+﻿using Domain;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Persistence;
+using System.Security.Claims;
+
+namespace Infrastructure.Security
+{
+    public class IsHostRequirement : IAuthorizationRequirement
+    {
+    }
+
+    public class IHostRequirementHandler : AuthorizationHandler<IsHostRequirement>
+    {
+        private readonly DataContext _dbContext;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public IHostRequirementHandler(DataContext dbContext, IHttpContextAccessor httpContextAccessor)
+        {
+            _dbContext = dbContext;
+            _httpContextAccessor = httpContextAccessor;
+        }
+
+        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, IsHostRequirement requirement)
+        {
+            string userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if(userId == null) return Task.CompletedTask;
+
+            Guid activityId = Guid.Parse(_httpContextAccessor.HttpContext?.Request.RouteValues
+                .SingleOrDefault(x => x.Key == "id").Value?.ToString());
+
+            ActivityAttendee attendee = _dbContext.ActivityAttendees
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.AppUserId == userId && x.ActivityId == activityId)
+                .Result;
+
+            if(attendee == null) return Task.CompletedTask;
+
+            if (attendee.IsHost) context.Succeed(requirement);
+
+            return Task.CompletedTask;
+        }
+    }
+}
