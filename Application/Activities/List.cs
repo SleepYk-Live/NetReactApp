@@ -10,8 +10,11 @@ namespace Application.Activities
 {
     public class List
     {
-        public class Query : IRequest<Result<List<ActivityDTO>>> { }
-        public class Handler : IRequestHandler<Query, Result<List<ActivityDTO>>>
+        public class Query : IRequest<Result<PagedList<ActivityDTO>>> 
+        {
+            public ActivityParams Info { get; set; }
+        }
+        public class Handler : IRequestHandler<Query, Result<PagedList<ActivityDTO>>>
         {
             private readonly DataContext _context;
             private readonly IMapper _mapper;
@@ -24,14 +27,32 @@ namespace Application.Activities
                 _userAccessor = userAccessor;
             }
 
-            public async Task<Result<List<ActivityDTO>>> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<Result<PagedList<ActivityDTO>>> Handle(Query request, CancellationToken cancellationToken)
             {
-                List<ActivityDTO> activities = await _context.Activities
+                IQueryable<ActivityDTO> query = _context.Activities
+                    .Where(x => x.Date >= request.Info.StartDate)
+                    .OrderBy(d => d.Date)
                     .ProjectTo<ActivityDTO>(_mapper.ConfigurationProvider
                     , new { currentUserName = _userAccessor.GetUsername() })
-                    .ToListAsync(cancellationToken);
+                    .AsQueryable();
 
-                return Result<List<ActivityDTO>>.Success(activities);
+                if(request.Info.IsGoing && !request.Info.IsHost)
+                {
+                    query = query.Where(x => x.Attendees.Any(a => a.Username == _userAccessor.GetUsername()));
+                }
+
+                if(request.Info.IsHost && !request.Info.IsGoing)
+                {
+                    query = query.Where(x => x.HostUsername == _userAccessor.GetUsername());
+                }
+
+                return Result<PagedList<ActivityDTO>>
+                    .Success(await PagedList<ActivityDTO>.CreateAsync
+                    (
+                        query,
+                        request.Info.PageNumber,
+                        request.Info.PageSize
+                    ));
             }
         }
     }
