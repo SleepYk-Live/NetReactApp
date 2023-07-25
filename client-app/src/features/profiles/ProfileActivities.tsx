@@ -12,7 +12,7 @@ const panes = [
     { menuItem: 'Hosting', pane: { key: 'hosting' }}
 ];
 
-export default observer(function profileActivities() {
+export default observer(function ProfileActivities() {
     const {profileStore} = useStore();
     const {
         loadUserActivities,
